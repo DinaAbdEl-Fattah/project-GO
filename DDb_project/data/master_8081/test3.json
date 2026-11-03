@@ -1,0 +1,23 @@
+{
+  "name": "test3",
+  "tables": {
+    "testttt3": {
+      "name": "testttt3",
+      "columns": [
+        {
+          "name": "id",
+          "type": "int"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "age",
+          "type": "22"
+        }
+      ],
+      "records": []
+    }
+  }
+}

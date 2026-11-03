@@ -1,0 +1,23 @@
+{
+  "name": "sh2",
+  "tables": {
+    "test2": {
+      "name": "test2",
+      "columns": [
+        {
+          "name": "id",
+          "type": "int"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "age",
+          "type": "int"
+        }
+      ],
+      "records": []
+    }
+  }
+}

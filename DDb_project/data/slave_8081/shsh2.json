@@ -1,0 +1,23 @@
+{
+  "name": "shsh2",
+  "tables": {
+    "shosho": {
+      "name": "shosho",
+      "columns": [
+        {
+          "name": "id",
+          "type": "int"
+        },
+        {
+          "name": "age",
+          "type": "int"
+        },
+        {
+          "name": "name",
+          "type": "str"
+        }
+      ],
+      "records": []
+    }
+  }
+}

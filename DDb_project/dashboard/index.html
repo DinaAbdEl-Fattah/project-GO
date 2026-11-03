@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Database Dashboard</title>
+    <!-- Google Fonts for premium typography -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Node Status & Cluster Info -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon"></div>
+                <h2>Distributed DB</h2>
+            </div>
+
+            <div class="card-section">
+                <h3>Connection Entry</h3>
+                <div class="form-group compact">
+                    <input type="text" id="connection-url" value="http://localhost:8080"
+                        placeholder="e.g. http://localhost:8080">
+                    <button class="btn accent-btn" onclick="connectToCluster()">Connect</button>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <h3>Register Slave Node</h3>
+                <div class="input-column">
+                    <input type="text" id="slave-register-url" placeholder="e.g. http://localhost:8081">
+                    <div class="input-row">
+                        <input type="number" id="slave-register-priority" placeholder="Priority" min="1" value="1" style="width: 90px;">
+                        <button class="btn accent-btn" style="flex: 1;" onclick="registerSlaveNode()">Register</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-section">
+                <h3>Cluster Topology</h3>
+                <div id="nodes-container" class="nodes-grid">
+                    <!-- Nodes will be rendered here dynamically -->
+                </div>
+            </div>
+
+            <div class="card-section">
+                <h3>Target Node</h3>
+                <div class="node-selector">
+                    <select id="target-node">
+                        <!-- Dynamic Options based on Cluster Info -->
+                    </select>
+                    <p class="selector-hint">Writes are proxied to the active Master node.</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="main-header">
+                <div>
+                    <h1>Cluster Dashboard</h1>
+                    <p>Execute CRUD operations, manage database schemas, and monitor parallel replication.</p>
+                </div>
+                <div class="cluster-badge" id="cluster-status-badge">Disconnected</div>
+            </header>
+
+            <div class="panels-grid">
+                <!-- Management Panel -->
+                <section class="panel glass-panel">
+                    <div class="panel-header">
+                        <div class="icon schema-icon"></div>
+                        <h3>Schema & Database Management</h3>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Database Operations</h4>
+                        <div class="input-row">
+                            <input type="text" id="db-name" placeholder="Database Name">
+                            <div class="btn-group">
+                                <button class="btn primary-btn" onclick="createDB()">Create DB</button>
+                                <button class="btn danger-btn" onclick="dropDB()">Drop DB</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Table Operations</h4>
+                        <div class="input-column">
+                            <input type="text" id="table-name" placeholder="Table Name">
+                            <input type="text" id="table-columns"
+                                placeholder="Columns e.g. id:int, name:string, specialty:string">
+                            <div class="btn-group">
+                                <button class="btn primary-btn" onclick="createTable()">Create Table</button>
+                                <button class="btn danger-btn" onclick="dropTable()">Drop Table</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Query Operations Panel -->
+                <section class="panel glass-panel">
+                    <div class="panel-header">
+                        <div class="icon query-icon"></div>
+                        <h3>Data & Record Operations</h3>
+                    </div>
+
+                    <div class="tabs-container">
+                        <div class="tabs-header">
+                            <button class="tab-btn active" onclick="switchTab('insert')">Insert</button>
+                            <button class="tab-btn" onclick="switchTab('select')">Select (Filter)</button>
+                            <button class="tab-btn" onclick="switchTab('search')">Search (Query)</button>
+                            <button class="tab-btn" onclick="switchTab('update')">Update</button>
+                            <button class="tab-btn" onclick="switchTab('delete')">Delete</button>
+                        </div>
+
+                        <div class="tabs-content">
+                            <!-- Insert Tab -->
+                            <div id="tab-insert" class="tab-pane active">
+                                <p class="tab-desc">Add a new record to the selected table.</p>
+                                <textarea id="insert-payload" class="code-area"
+                                    placeholder='{"id": 1, "name": "Dr. Ahmed", "specialty": "Cardiology"}'></textarea>
+                                <button class="btn success-btn full-btn" onclick="insertRecord()">Insert Record</button>
+                            </div>
+
+                            <!-- Select Tab -->
+                            <div id="tab-select" class="tab-pane">
+                                <p class="tab-desc">Select rows matching the conditions exactly (empty payload returns
+                                    all rows).</p>
+                                <textarea id="select-condition" class="code-area" placeholder='{"id": 1}'></textarea>
+                                <button class="btn info-btn full-btn" onclick="selectRecords()">Select / Filter
+                                    Records</button>
+                            </div>
+
+                            <!-- Search Tab -->
+                            <div id="tab-search" class="tab-pane">
+                                <p class="tab-desc">Perform a case-insensitive substring search across all record
+                                    attributes.</p>
+                                <input type="text" id="search-query" placeholder="Enter search keyword (e.g. Cardio)">
+                                <button class="btn secondary-btn full-btn" onclick="searchRecords()">Search
+                                    Records</button>
+                            </div>
+
+                            <!-- Update Tab -->
+                            <div id="tab-update" class="tab-pane">
+                                <p class="tab-desc">Update records matching the condition payload with fields in the
+                                    updates payload.</p>
+                                <div class="split-textareas">
+                                    <div>
+                                        <label>Filter Condition</label>
+                                        <textarea id="update-condition" class="code-area small-area"
+                                            placeholder='{"id": 1}'></textarea>
+                                    </div>
+                                    <div>
+                                        <label>Updates Data</label>
+                                        <textarea id="update-payload" class="code-area small-area"
+                                            placeholder='{"specialty": "Neurology"}'></textarea>
+                                    </div>
+                                </div>
+                                <button class="btn warning-btn full-btn" onclick="updateRecords()">Update
+                                    Records</button>
+                            </div>
+
+                            <!-- Delete Tab -->
+                            <div id="tab-delete" class="tab-pane">
+                                <p class="tab-desc">Delete all records matching the condition payload.</p>
+                                <textarea id="delete-condition" class="code-area" placeholder='{"id": 1}'></textarea>
+                                <button class="btn danger-btn full-btn" onclick="deleteRecords()">Delete
+                                    Records</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Master Authorization Queue (visible only when connected to Master) -->
+            <section id="approvals-panel" class="panel glass-panel approvals-panel" style="display: none;">
+                <div class="panel-header">
+                    <div class="icon auth-icon"></div>
+                    <h3>Master Authorization Queue</h3>
+                    <span id="approvals-count" class="approvals-badge">0</span>
+                </div>
+                <p class="approvals-hint">Slave requests waiting for your approval. You can also type <code>y &lt;id&gt;</code> or <code>n &lt;id&gt;</code> in the Master terminal.</p>
+                <div id="approvals-list" class="approvals-list">
+                    <p class="empty-queue">No pending requests.</p>
+                </div>
+            </section>
+
+            <!-- Terminal / Output Log Console -->
+            <section class="console-panel glass-panel">
+                <div class="console-header">
+                    <div class="console-title">
+                        <span class="pulse-dot green"></span>
+                        <h3>Response Console</h3>
+                    </div>
+                    <button class="btn clear-btn" onclick="clearConsole()">Clear Logs</button>
+                </div>
+                <div class="console-body">
+                    <pre id="console-output">Connect to a node to view logs...</pre>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>
